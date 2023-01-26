@@ -1,6 +1,7 @@
 ﻿using Microcharts;
 using Microcharts.Forms;
 using SkiaSharp;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,55 +20,52 @@ namespace Money
             InitializeComponent();
             DeviceDisplay.KeepScreenOn = true;
             this.BackgroundColor = Color.Black;
+            _ = InitializeCurrencies();
+            _ = DrawChart();
+        }
 
-            apiFetcher = new ApiFetcher();
-
-            currencies = apiFetcher.GetObjectAsync().Result;
-            DisplayAlert("init", "init " + currencies.Count.ToString(), "cancel");
-            
-
-            var userValues = new List<Entry> { mdl, usd, ron, rub, uah, gbp, eur };
-
-            userValues.ForEach((e) =>
-            {
-                e.TextChanged += E_TextChanged;
-                e.Focused += E_Focused;
-            });
-
+        private async Task DrawChart()
+        {
+            await Task.Delay(1000);
             var entries = new List<ChartEntry>();
-
-            for (int i = 0; i < 7; i++)
+            foreach (var currency in currencies)
             {
-                entries.Add(new ChartEntry(5.6F)
+                var day = DateTime.Now.DayOfWeek;
+                entries.Add(new ChartEntry((float)currency.Value[0][1])
                 {
-                    Label = i.ToString(),
-                    ValueLabel = i.ToString(),
+                    Label = day.ToString(),
+                    ValueLabel = currency.Value[0][1].ToString(),
                     Color = SKColors.Gray,
                     TextColor = SKColors.Gray,
                     ValueLabelColor = SKColors.Gray
-                }); 
+                });
             }
-            var chart = new LineChart { Entries = entries, BackgroundColor = SKColor.Parse("#031b29") };
-            chart.LabelTextSize = 30;
+
+            var chart = new LineChart
+            {
+                Entries = entries,
+                BackgroundColor = SKColor.Parse("#031b29"),
+                LabelTextSize = 30
+            };
             chartView = new ChartView { Chart = chart };
 
             stackLayout.Children.Add(chartView);
         }
 
-
-        //async void InitializeCurrencies()
-        //{
-        //    ApiFetcher fetcher = new ApiFetcher();
-        //    await Task.Run(() =>
-        //    {
-        //        currencies = fetcher.GetFetched();                
-        //    });
-        //}
+        async Task InitializeCurrencies()
+        {
+            apiFetcher = new ApiFetcher();
+            await Task.Run(async () =>
+            {
+                currencies = await apiFetcher.GetObjectAsync();
+            });
+        }
 
 
         private void E_Focused(object sender, FocusEventArgs e)
         {
-            DisplayAlert("Focused", "Currencies ", "Cancel");
+            if (currencies != null) DisplayAlert("init", "init " + currencies.Count.ToString(), "cancel");
+            //DisplayAlert("Focused", "Currencies ", "Cancel");
         }
 
         private void E_TextChanged(object sender, TextChangedEventArgs e)
@@ -76,42 +74,13 @@ namespace Money
         }
     }
 }
-/*
+//
+//
 
-var userValues = new List<Entry>();
-userValues.Add(mdl);
-userValues.Add(usd);
-userValues.Add(ron);
-userValues.Add(rub);
-userValues.Add(uah);
-userValues.Add(gbp);
-userValues.Add(eur);
+//var userValues = new List<Entry> { mdl, usd, ron, rub, uah, gbp, eur };
 
-userValues.ForEach((e) =>
-{
-    e.TextChanged += E_TextChanged;
-    e.Focused += E_Focused;
-});
-
-var entries = new List<ChartEntry>();
-
-for (int i = 0; i < 7; i++)
-{
-    entries.Add(new ChartEntry(5.6F)
-    {
-        Label = i.ToString(),
-        ValueLabel = i.ToString(),
-        Color = SKColors.Gray,
-        TextColor = SKColors.Gray,
-        ValueLabelColor = SKColors.Gray
-    });
-}
-var chart = new LineChart { Entries = entries, BackgroundColor = SKColor.Parse("#031b29") };
-chart.LabelTextSize = 30;
-chartView = new ChartView { Chart = chart };
-
-stackLayout.Children.Add(chartView);
-//currencies = fetcher.GetFetched();
-DisplayAlert("Internet", $"{Connectivity.NetworkAccess}", "Cancel");
-
-*/
+//userValues.ForEach((e) =>
+//{
+//    e.TextChanged += E_TextChanged;
+//    e.Focused += E_Focused;
+//});

@@ -35,20 +35,28 @@
                 <ColumnDefinition Width="0.2*" />
                 <ColumnDefinition Width="0.8*" />
             </Grid.ColumnDefinitions>
+            
             <Label Grid.Row="0" VerticalTextAlignment="Center" HorizontalTextAlignment="Center" BackgroundColor="#031b29">MDL</Label>
             <Entry x:Name="mdl" Grid.Column="1" Grid.Row="0" BackgroundColor="#031b29" Keyboard="Numeric"></Entry>
+            
             <Label Grid.Row="1" VerticalTextAlignment="Center" HorizontalTextAlignment="Center" BackgroundColor="#031b29">USD</Label>
             <Entry x:Name="usd" Grid.Column="1" Grid.Row="1" BackgroundColor="#031b29" Keyboard="Numeric"></Entry>
+            
             <Label Grid.Row="2" VerticalTextAlignment="Center" HorizontalTextAlignment="Center" BackgroundColor="#031b29">RON</Label>
             <Entry x:Name="ron" Grid.Column="1" Grid.Row="2" BackgroundColor="#031b29" Keyboard="Numeric"></Entry>
+            
             <Label Grid.Row="3" VerticalTextAlignment="Center" HorizontalTextAlignment="Center" BackgroundColor="#031b29">RUB</Label>
             <Entry x:Name="rub" Grid.Column="1" Grid.Row="3" BackgroundColor="#031b29" Keyboard="Numeric"></Entry>
+            
             <Label Grid.Row="4" VerticalTextAlignment="Center" HorizontalTextAlignment="Center" BackgroundColor="#031b29">UAH</Label>
             <Entry x:Name="uah" Grid.Column="1" Grid.Row="4" BackgroundColor="#031b29" Keyboard="Numeric"></Entry>
+            
             <Label Grid.Row="5" VerticalTextAlignment="Center" HorizontalTextAlignment="Center" BackgroundColor="#031b29">GBP</Label>
             <Entry x:Name="gbp" Grid.Column="1" Grid.Row="5" BackgroundColor="#031b29" Keyboard="Numeric"></Entry>
+            
             <Label Grid.Row="6" VerticalTextAlignment="Center" HorizontalTextAlignment="Center" BackgroundColor="#031b29">EUR</Label>
             <Entry x:Name="eur" Grid.Column="1" Grid.Row="6" BackgroundColor="#031b29" Keyboard="Numeric"></Entry>
+            
         </Grid>
     </Grid>
 
