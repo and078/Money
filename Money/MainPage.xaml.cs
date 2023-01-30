@@ -14,14 +14,37 @@ namespace Money
     {
         ChartView chartView;
         ApiFetcher apiFetcher;
-        static Dictionary<string, List<List<double>>> currencies;
+        Dictionary<string, List<List<double>>> currencies;
+        Dictionary<string, double> todayRates = new Dictionary<string, double>();
+        Dictionary<string, Entry> entries;
+        Calculator calculator;
+
+        // mdl, usd, ron, rub, uah, gbp, eur
+        //DisplayAlert("Changed", "Changed", "Cancel");
+
         public MainPage()
         {
             InitializeComponent();
+            _ = InitializeCurrenciesAsync();
+
             DeviceDisplay.KeepScreenOn = true;
             this.BackgroundColor = Color.Black;
-            _ = InitializeCurrencies();
-            _ = DrawChart(mdl);
+
+            entries = new Dictionary<string, Entry>()
+            {
+                { nameof(mdl), mdl},
+                { nameof(usd), usd},
+                { nameof(ron), ron},
+                { nameof(rub), rub},
+                { nameof(uah), uah},
+                { nameof(gbp), gbp},
+                { nameof(eur), eur},
+            };
+            
+            calculator = new Calculator(entries, todayRates);
+
+
+            mdl.Text = "100";
 
             mdl.TextChanged += Mdl_TextChanged;
             mdl.Focused += Mdl_Focused;
@@ -45,20 +68,19 @@ namespace Money
             eur.Focused += Eur_Focused;
         }
 
-        private async Task DrawChart(Entry entry)
+        private async Task DrawChart(string currentCurrency)
         {
-            await Task.Delay(1000);
+            await Task.Delay(100);
             var charEntries = new List<ChartEntry>();
-            var day = DateTime.Now.DayOfWeek;
-            var currentCurrency = entry.ToString();
-            await DisplayAlert("Changed", currentCurrency.ToString(), "Cancel");
+            var currency = currencies[currentCurrency];
+            var rates = currency.SelectMany(arr => arr.Where((x, i) => i % 2 == 1)).ToList();
 
-            foreach (var currency in currencies)
+            foreach (var rate in currency)
             {
-                charEntries.Add(new ChartEntry((float)currency.Value[0][1])
+                charEntries.Add(new ChartEntry((float)rate[1])
                 {
-                    Label = day.ToString(),
-                    ValueLabel = currency.Value[0][1].ToString(),
+                    Label = new DateTime(1970, 1, 1, 0, 0, 0, 0).Add(TimeSpan.FromMilliseconds((long)rate[0])).ToString("yyyy-MM-dd"),
+                    ValueLabel = rate[1].ToString(),
                     Color = SKColors.Gray,
                     TextColor = SKColors.Gray,
                     ValueLabelColor = SKColors.Gray
@@ -68,113 +90,111 @@ namespace Money
             var chart = new LineChart
             {
                 Entries = charEntries,
+                LabelOrientation = Orientation.Horizontal,
+                ValueLabelOrientation= Orientation.Horizontal,
+                MaxValue = (float)rates.Max(),
+                MinValue = (float)rates.Min(),
                 BackgroundColor = SKColor.Parse("#031b29"),
-                LabelTextSize = 30
+                LabelTextSize = 23
             };
             chartView = new ChartView { Chart = chart };
 
             stackLayout.Children.Add(chartView);
         }
 
-        async Task InitializeCurrencies()
+        async Task InitializeCurrenciesAsync()
         {
             apiFetcher = new ApiFetcher();
             await Task.Run(async () =>
             {
-                currencies = await apiFetcher.GetObjectAsync(); 
+                currencies = await apiFetcher.GetObjectAsync();
             });
+            currencies.Add("mdl", );
+
+            _ = DrawChart("usd");
+            _ = InitializeTodayRatesAsync();
+        }
+
+        async Task InitializeTodayRatesAsync()
+        {
+            await Task.Delay(100);
+            if(currencies != null)
+            {
+                foreach (var currency in currencies)
+                {
+                    todayRates.Add(currency.Key, currency.Value[6][1]);
+                }
+            }
         }
 
         private void Eur_Focused(object sender, FocusEventArgs e)
         {
-            DrawChart(eur);
+            _ = DrawChart("eur");
         }
 
         private void Eur_TextChanged(object sender, TextChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            eur.Text = todayRates["eur"].ToString();
         }
 
         private void Gbp_Focused(object sender, FocusEventArgs e)
         {
-            throw new NotImplementedException();
+            _ = DrawChart("gbp");
         }
 
         private void Gbp_TextChanged(object sender, TextChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            gbp.Text = todayRates["gbp"].ToString();
         }
 
         private void Uah_Focused(object sender, FocusEventArgs e)
         {
-            throw new NotImplementedException();
+            _ = DrawChart("uah");
         }
 
         private void Uah_TextChanged(object sender, TextChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            uah.Text = todayRates["uah"].ToString();
         }
 
         private void Rub_Focused(object sender, FocusEventArgs e)
         {
-            throw new NotImplementedException();
+            _ = DrawChart("rub");
         }
 
         private void Rub_TextChanged(object sender, TextChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            rub.Text = todayRates["rub"].ToString();
         }
 
         private void Ron_Focused(object sender, FocusEventArgs e)
         {
-            throw new NotImplementedException();
+            _ = DrawChart("ron");
         }
 
         private void Ron_TextChanged(object sender, TextChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            ron.Text = todayRates["ron"].ToString();
         }
 
         private void Usd_Focused(object sender, FocusEventArgs e)
         {
-            throw new NotImplementedException();
-        }
-
-        private void Mdl_Focused(object sender, FocusEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void Mdl_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            throw new NotImplementedException();
+            _ = DrawChart("usd");
         }
 
         private void Usd_TextChanged(object sender, TextChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            usd.Text = todayRates["usd"].ToString();
+        }
+
+        private void Mdl_Focused(object sender, FocusEventArgs e)
+        {
+            _ = DrawChart("mdl");
+        }
+
+        private void Mdl_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            mdl.Text = todayRates["mdl"].ToString();
         }
     }
 }
-//
-//
-
-//var userValues = new List<Entry> { mdl, usd, ron, rub, uah, gbp, eur };
-
-//userValues.ForEach((e) =>
-//{
-//    e.TextChanged += E_TextChanged;
-//    e.Focused += E_Focused;
-//});
-
-//private void E_Focused(object sender, FocusEventArgs e)
-//{
-//    if (currencies != null) DisplayAlert("init", "init " + currencies.Count.ToString(), "cancel");
-//    //DisplayAlert("Focused", "Currencies ", "Cancel");
-//} 
-
-//private void E_TextChanged(object sender, TextChangedEventArgs e)
-//{
-//    DisplayAlert("Changed", "Changed " + sender.ToString(), "Cancel");
-//}
-
