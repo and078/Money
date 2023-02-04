@@ -32,19 +32,17 @@ namespace Money
 
             entries = new Dictionary<string, Entry>()
             {
-                { nameof(mdl), mdl},
-                { nameof(usd), usd},
-                { nameof(ron), ron},
-                { nameof(rub), rub},
-                { nameof(uah), uah},
-                { nameof(gbp), gbp},
-                { nameof(eur), eur},
+                { nameof(mdl), mdl },
+                { nameof(usd), usd },
+                { nameof(ron), ron },
+                { nameof(rub), rub },
+                { nameof(uah), uah },
+                { nameof(gbp), gbp },
+                { nameof(eur), eur },
             };
-            
-            calculator = new Calculator(entries, todayRates);
-
 
             mdl.Text = "100";
+            calculator = new Calculator("mdl", entries, todayRates);
 
             mdl.TextChanged += Mdl_TextChanged;
             mdl.Focused += Mdl_Focused;
@@ -70,7 +68,7 @@ namespace Money
 
         private async Task DrawChart(string currentCurrency)
         {
-            await Task.Delay(100);
+            await Task.Delay(0);
             var charEntries = new List<ChartEntry>();
             var currency = currencies[currentCurrency];
             var rates = currency.SelectMany(arr => arr.Where((x, i) => i % 2 == 1)).ToList();
@@ -79,13 +77,13 @@ namespace Money
             {
                 charEntries.Add(new ChartEntry((float)rate[1])
                 {
-                    Label = new DateTime(1970, 1, 1, 0, 0, 0, 0).Add(TimeSpan.FromMilliseconds((long)rate[0])).ToString("yyyy-MM-dd"),
-                    ValueLabel = rate[1].ToString(),
+                    Label = new DateTime(1970, 1, 1, 0, 0, 0, 0).Add(TimeSpan.FromMilliseconds((long)rate[0] + DaysInMillisecondsCalculator.MsPerDay)).ToString("yyyy-MM-dd"),
+                    ValueLabel = rate[1] < 0.09 ? 1.0.ToString() : rate[1].ToString(),
                     Color = SKColors.Gray,
                     TextColor = SKColors.Gray,
                     ValueLabelColor = SKColors.Gray
                 });
-            }
+            } 
 
             var chart = new LineChart
             {
@@ -109,21 +107,36 @@ namespace Money
             {
                 currencies = await apiFetcher.GetObjectAsync();
             });
-            currencies.Add("mdl", );
 
-            _ = DrawChart("usd");
+            var mdlValues = new List<List<double>>();
+
+            foreach (List<double> value in currencies["usd"])
+            {
+                mdlValues.Add(new List<double>(value));
+            }
+
+            for (int i = 0; i < mdlValues.Count; i++)
+            {
+                var mid = currencies["usd"][i][1];
+                mdlValues[i][1] = 1.0 / mid;
+            }
+
+            currencies.Add("mdl", mdlValues);
+
+            _ = DrawChart("mdl");
             _ = InitializeTodayRatesAsync();
         }
 
         async Task InitializeTodayRatesAsync()
         {
-            await Task.Delay(100);
+            await Task.Delay(0);
             if(currencies != null)
             {
                 foreach (var currency in currencies)
                 {
                     todayRates.Add(currency.Key, currency.Value[6][1]);
                 }
+                todayRates.Add("mdl", 1.0);
             }
         }
 
@@ -134,7 +147,7 @@ namespace Money
 
         private void Eur_TextChanged(object sender, TextChangedEventArgs e)
         {
-            eur.Text = todayRates["eur"].ToString();
+            calculator.CalculateFor("eur", entries, todayRates);
         }
 
         private void Gbp_Focused(object sender, FocusEventArgs e)
@@ -144,7 +157,7 @@ namespace Money
 
         private void Gbp_TextChanged(object sender, TextChangedEventArgs e)
         {
-            gbp.Text = todayRates["gbp"].ToString();
+            calculator.CalculateFor("gbp", entries, todayRates);
         }
 
         private void Uah_Focused(object sender, FocusEventArgs e)
@@ -154,7 +167,7 @@ namespace Money
 
         private void Uah_TextChanged(object sender, TextChangedEventArgs e)
         {
-            uah.Text = todayRates["uah"].ToString();
+            calculator.CalculateFor("uah", entries, todayRates);
         }
 
         private void Rub_Focused(object sender, FocusEventArgs e)
@@ -164,7 +177,7 @@ namespace Money
 
         private void Rub_TextChanged(object sender, TextChangedEventArgs e)
         {
-            rub.Text = todayRates["rub"].ToString();
+            calculator.CalculateFor("rub", entries, todayRates);
         }
 
         private void Ron_Focused(object sender, FocusEventArgs e)
@@ -174,7 +187,7 @@ namespace Money
 
         private void Ron_TextChanged(object sender, TextChangedEventArgs e)
         {
-            ron.Text = todayRates["ron"].ToString();
+            calculator.CalculateFor("ron", entries, todayRates);
         }
 
         private void Usd_Focused(object sender, FocusEventArgs e)
@@ -184,7 +197,7 @@ namespace Money
 
         private void Usd_TextChanged(object sender, TextChangedEventArgs e)
         {
-            usd.Text = todayRates["usd"].ToString();
+            calculator.CalculateFor("usd", entries, todayRates);
         }
 
         private void Mdl_Focused(object sender, FocusEventArgs e)
@@ -194,7 +207,7 @@ namespace Money
 
         private void Mdl_TextChanged(object sender, TextChangedEventArgs e)
         {
-            mdl.Text = todayRates["mdl"].ToString();
+            calculator.CalculateFor("mdl", entries, todayRates);
         }
     }
 }

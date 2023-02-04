@@ -6,9 +6,10 @@ namespace Money
 {
     internal class DaysInMillisecondsCalculator
     {
-        private const int firstDay = 82800000; //23:00 1.01.1970
-        private const int msPerDay = 86400000;
-
+        private const long firstDay = 82800000; //23:00 1.01.1970
+        private const long msPerDay = 86400000;
+        public static long FirstDay { get; } = 82800000;
+        public static long MsPerDay { get; } = 86400000;
         private static long DateNowInMilliseconds ()
         {
             DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
