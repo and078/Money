@@ -167,7 +167,8 @@ namespace Money
 
         private void Uah_TextChanged(object sender, TextChangedEventArgs e)
         {
-            calculator.CalculateFor("uah", entries, todayRates);
+            //calculator.CalculateFor("uah", entries, todayRates);
+            DisplayAlert("Changed", "Changed " + sender, "Cancel");
         }
 
         private void Rub_Focused(object sender, FocusEventArgs e)

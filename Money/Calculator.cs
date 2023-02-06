@@ -24,14 +24,14 @@ namespace Money
 
             var currentEntryDouble = Double.Parse(currentEntry.Text);
 
-            var filteredEnrties = enrties.Where(e => e.Key != currentCurrency).ToDictionary(e => e.Key, e => e.Value);
-            var filteredTodayRates = todayRates.Where(r => r.Key != currentCurrency).ToDictionary(r => r.Key, r => r.Value);
+            //var filteredEnrties = enrties.Where(e => e.Key != currentCurrency).ToDictionary(e => e.Key, e => e.Value);
+            //var filteredTodayRates = todayRates.Where(r => r.Key != currentCurrency).ToDictionary(r => r.Key, r => r.Value);
 
-            foreach(var entry in filteredEnrties)
+            foreach(var entry in enrties)
             {
-                //string key = entry.Key;
-                entry.Value.Text = (currentEntryDouble * filteredTodayRates[entry.Key]).ToString();
-            }
+                var key = entry.Key;
+                entry.Value.Text = (currentEntryDouble * (currentTodayRate / todayRates[key])).ToString();
+            } 
         }
-    }
+    } 
 }
