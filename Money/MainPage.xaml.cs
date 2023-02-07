@@ -12,11 +12,16 @@ namespace Money
 {
     public partial class MainPage : ContentPage
     {
+        delegate void TextChangedDelegate(object sender, TextChangedEventArgs e);
+        delegate void FocusDelegate(object sender, FocusEventArgs e);
+
         ChartView chartView;
         ApiFetcher apiFetcher;
         Dictionary<string, List<List<double>>> currencies;
         Dictionary<string, double> todayRates = new Dictionary<string, double>();
         Dictionary<string, Entry> entries;
+        Dictionary<string, TextChangedDelegate> textChahgeDelegates;
+        Dictionary<string, FocusDelegate> focusDelegates;
         Calculator calculator;
 
         // mdl, usd, ron, rub, uah, gbp, eur
@@ -24,9 +29,15 @@ namespace Money
 
         public MainPage()
         {
+            var current = Connectivity.NetworkAccess;
+
+            if (current != NetworkAccess.Internet)
+            {
+                DisplayAlert("No Internet!", "Internet connection needed!", "Abort");
+            }
             InitializeComponent();
             _ = InitializeCurrenciesAsync();
-
+            
             DeviceDisplay.KeepScreenOn = true;
             this.BackgroundColor = Color.Black;
 
@@ -41,30 +52,40 @@ namespace Money
                 { nameof(eur), eur },
             };
 
-            mdl.Text = "100";
-            calculator = new Calculator("mdl", entries, todayRates);
+            textChahgeDelegates = new Dictionary<string, TextChangedDelegate>()
+            {
+                { nameof(mdl), Mdl_TextChanged },
+                { nameof(usd), Usd_TextChanged },
+                { nameof(ron), Ron_TextChanged },
+                { nameof(rub), Rub_TextChanged },
+                { nameof(uah), Uah_TextChanged },
+                { nameof(gbp), Gbp_TextChanged },
+                { nameof(eur), Eur_TextChanged },
+            };
 
-            mdl.TextChanged += Mdl_TextChanged;
-            mdl.Focused += Mdl_Focused;
+            focusDelegates = new Dictionary<string, FocusDelegate>()
+            {
+                { nameof(mdl), Mdl_Focused },
+                { nameof(usd), Usd_Focused },
+                { nameof(ron), Ron_Focused },
+                { nameof(rub), Rub_Focused },
+                { nameof(uah), Uah_Focused },
+                { nameof(gbp), Gbp_Focused },
+                { nameof(eur), Eur_Focused },
+            };
+            var focus = focusDelegates[nameof(mdl)];
 
-            usd.TextChanged += Usd_TextChanged;
-            usd.Focused += Usd_Focused;
+            foreach(var entry in entries)
+            {
+                var value = entry.Value;
+                FocusDelegate focusDelegate = focusDelegates[entry.Key];
+                EventHandler<FocusEventArgs> eventHandler = new EventHandler<FocusEventArgs>(focusDelegate);
+                value.Focused += eventHandler;
+            }
 
-            ron.TextChanged += Ron_TextChanged;
-            ron.Focused += Ron_Focused;
-
-            rub.TextChanged += Rub_TextChanged;
-            rub.Focused += Rub_Focused;
-
-            uah.TextChanged += Uah_TextChanged;
-            uah.Focused += Uah_Focused;
-
-            gbp.TextChanged += Gbp_TextChanged;
-            gbp.Focused += Gbp_Focused;
-
-            eur.TextChanged += Eur_TextChanged;
-            eur.Focused += Eur_Focused;
+            //mdl.Text = "100";
         }
+
 
         private async Task DrawChart(string currentCurrency)
         {
@@ -117,14 +138,14 @@ namespace Money
 
             for (int i = 0; i < mdlValues.Count; i++)
             {
-                var mid = currencies["usd"][i][1];
-                mdlValues[i][1] = 1.0 / mid;
+                mdlValues[i][1] = 1.0;
             }
 
             currencies.Add("mdl", mdlValues);
 
             _ = DrawChart("mdl");
             _ = InitializeTodayRatesAsync();
+            calculator = new Calculator();
         }
 
         async Task InitializeTodayRatesAsync()
@@ -140,10 +161,27 @@ namespace Money
             }
         }
 
+        private void SubscribeTextChangeHandlerBy(string currentCurrency)
+        {
+            foreach(var entry in entries)
+            {
+                var value = entry.Value;
+                TextChangedDelegate loopTextChangedDelegate = textChahgeDelegates[entry.Key];
+                EventHandler<TextChangedEventArgs> loopEventHandler = new EventHandler<TextChangedEventArgs>(loopTextChangedDelegate);
+                value.TextChanged -= loopEventHandler;
+            }
+
+            TextChangedDelegate textChangedDelegate = textChahgeDelegates[currentCurrency];
+            EventHandler<TextChangedEventArgs> eventHandler = new EventHandler<TextChangedEventArgs>(textChangedDelegate);
+            entries[currentCurrency].TextChanged += eventHandler;
+        }
+
         private void Eur_Focused(object sender, FocusEventArgs e)
         {
             _ = DrawChart("eur");
+            SubscribeTextChangeHandlerBy("eur");
         }
+
 
         private void Eur_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -153,6 +191,7 @@ namespace Money
         private void Gbp_Focused(object sender, FocusEventArgs e)
         {
             _ = DrawChart("gbp");
+            SubscribeTextChangeHandlerBy("gbp");
         }
 
         private void Gbp_TextChanged(object sender, TextChangedEventArgs e)
@@ -163,17 +202,18 @@ namespace Money
         private void Uah_Focused(object sender, FocusEventArgs e)
         {
             _ = DrawChart("uah");
+            SubscribeTextChangeHandlerBy("uah");
         }
 
         private void Uah_TextChanged(object sender, TextChangedEventArgs e)
         {
-            //calculator.CalculateFor("uah", entries, todayRates);
-            DisplayAlert("Changed", "Changed " + sender, "Cancel");
+            calculator.CalculateFor("uah", entries, todayRates);
         }
 
         private void Rub_Focused(object sender, FocusEventArgs e)
         {
             _ = DrawChart("rub");
+            SubscribeTextChangeHandlerBy("rub");
         }
 
         private void Rub_TextChanged(object sender, TextChangedEventArgs e)
@@ -184,6 +224,7 @@ namespace Money
         private void Ron_Focused(object sender, FocusEventArgs e)
         {
             _ = DrawChart("ron");
+            SubscribeTextChangeHandlerBy("ron");
         }
 
         private void Ron_TextChanged(object sender, TextChangedEventArgs e)
@@ -194,6 +235,7 @@ namespace Money
         private void Usd_Focused(object sender, FocusEventArgs e)
         {
             _ = DrawChart("usd");
+            SubscribeTextChangeHandlerBy("usd");
         }
 
         private void Usd_TextChanged(object sender, TextChangedEventArgs e)
@@ -204,6 +246,7 @@ namespace Money
         private void Mdl_Focused(object sender, FocusEventArgs e)
         {
             _ = DrawChart("mdl");
+            SubscribeTextChangeHandlerBy("mdl");
         }
 
         private void Mdl_TextChanged(object sender, TextChangedEventArgs e)
