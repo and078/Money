@@ -23,7 +23,7 @@ namespace Money
         Dictionary<string, TextChangedDelegate> textChahgeDelegates;
         Dictionary<string, FocusDelegate> focusDelegates;
         Calculator calculator;
-
+        
         // mdl, usd, ron, rub, uah, gbp, eur
         //DisplayAlert("Changed", "Changed", "Cancel");
 
@@ -98,13 +98,13 @@ namespace Money
             {
                 charEntries.Add(new ChartEntry((float)rate[1])
                 {
-                    Label = new DateTime(1970, 1, 1, 0, 0, 0, 0).Add(TimeSpan.FromMilliseconds((long)rate[0] + DaysInMillisecondsCalculator.MsPerDay)).ToString("yyyy-MM-dd"),
+                    Label = new DateTime(1970, 1, 1, 0, 0, 0, 0).Add(TimeSpan.FromMilliseconds((long)rate[0] + DaysInMillisecondsCalculator.MsPerDay)).ToString("dd"),
                     ValueLabel = rate[1] < 0.09 ? 1.0.ToString() : rate[1].ToString(),
-                    Color = SKColors.Gray,
-                    TextColor = SKColors.Gray,
+                    Color = SKColors.DarkRed,
+                    TextColor = SKColors.DarkRed,
                     ValueLabelColor = SKColors.Gray
                 });
-            } 
+            }
 
             var chart = new LineChart
             {
@@ -114,11 +114,11 @@ namespace Money
                 MaxValue = (float)rates.Max(),
                 MinValue = (float)rates.Min(),
                 BackgroundColor = SKColor.Parse("#031b29"),
-                LabelTextSize = 23
+                LabelTextSize = 18
             };
             chartView = new ChartView { Chart = chart };
 
-            stackLayout.Children.Add(chartView);
+            currenciesChart.Children.Add(chartView);
         }
 
         async Task InitializeCurrenciesAsync()
@@ -166,9 +166,9 @@ namespace Money
             foreach(var entry in entries)
             {
                 var value = entry.Value;
-                TextChangedDelegate loopTextChangedDelegate = textChahgeDelegates[entry.Key];
-                EventHandler<TextChangedEventArgs> loopEventHandler = new EventHandler<TextChangedEventArgs>(loopTextChangedDelegate);
-                value.TextChanged -= loopEventHandler;
+                TextChangedDelegate t = textChahgeDelegates[entry.Key];
+                EventHandler<TextChangedEventArgs> h = new EventHandler<TextChangedEventArgs>(t);
+                value.TextChanged -= h;
             }
 
             TextChangedDelegate textChangedDelegate = textChahgeDelegates[currentCurrency];

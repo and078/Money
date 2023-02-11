@@ -11,6 +11,10 @@ namespace Money
         {
             var currentEntry = enrties[currentCurrency];
             var currentTodayRate = todayRates[currentCurrency];
+            if(currentEntry.Text == "0")
+            {
+                currentEntry.Text = String.Empty;
+            }
 
             var currentEntryDouble = currentEntry.Text == String.Empty? 0.0 : Double.Parse(currentEntry.Text);
 
@@ -21,7 +25,7 @@ namespace Money
             {
                 var key = entry.Key;
                 entry.Value.Text = Math.Round((currentEntryDouble * (currentTodayRate / filteredTodayRates[key])), 4).ToString();
-            } 
+            }
         }
-    } 
+    }
 }
