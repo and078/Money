@@ -16,7 +16,9 @@ namespace Money
         delegate void FocusDelegate(object sender, FocusEventArgs e);
 
         ChartView chartView;
-        ApiFetcher apiFetcher;
+        ApiFetcher currenciesFetcher;
+        BTCFetcher btcFetcher;
+        double btcInUsd;
         Dictionary<string, List<List<double>>> currencies;
         Dictionary<string, double> todayRates = new Dictionary<string, double>();
         Dictionary<string, Entry> entries;
@@ -50,6 +52,7 @@ namespace Money
                 { nameof(uah), uah },
                 { nameof(gbp), gbp },
                 { nameof(eur), eur },
+                { nameof(btc), btc },
             };
 
             textChahgeDelegates = new Dictionary<string, TextChangedDelegate>()
@@ -61,6 +64,7 @@ namespace Money
                 { nameof(uah), Uah_TextChanged },
                 { nameof(gbp), Gbp_TextChanged },
                 { nameof(eur), Eur_TextChanged },
+                { nameof(btc), Btc_TextChanged },
             };
 
             focusDelegates = new Dictionary<string, FocusDelegate>()
@@ -72,6 +76,7 @@ namespace Money
                 { nameof(uah), Uah_Focused },
                 { nameof(gbp), Gbp_Focused },
                 { nameof(eur), Eur_Focused },
+                { nameof(btc), Btc_Focused },
             };
             var focus = focusDelegates[nameof(mdl)];
 
@@ -86,17 +91,30 @@ namespace Money
             //mdl.Text = "100";
         }
 
+        
 
         private async Task DrawChart(string currentCurrency)
         {
             await Task.Delay(0);
-            var charEntries = new List<ChartEntry>();
+            var chartEntries = new List<ChartEntry>();
             var currency = currencies[currentCurrency];
+            var usds = currencies["usd"];
             var rates = currency.SelectMany(arr => arr.Where((x, i) => i % 2 == 1)).ToList();
+
+            if(currentCurrency == "mdl")
+            {
+                for(int i = 0; i < currency.Count; i++)
+                {
+                    for(int j = 0; j < currency[i].Count; j++)
+                    {
+                        currency[i][j] = 1.0 / usds[i][j];
+                    }
+                }
+            }
 
             foreach (var rate in currency)
             {
-                charEntries.Add(new ChartEntry((float)rate[1])
+                chartEntries.Add(new ChartEntry((float)rate[1])
                 {
                     Label = new DateTime(1970, 1, 1, 0, 0, 0, 0).Add(TimeSpan.FromMilliseconds((long)rate[0] + DaysInMillisecondsCalculator.MsPerDay)).ToString("dd"),
                     ValueLabel = rate[1] < 0.09 ? 1.0.ToString() : rate[1].ToString(),
@@ -108,7 +126,7 @@ namespace Money
 
             var chart = new LineChart
             {
-                Entries = charEntries,
+                Entries = chartEntries,
                 LabelOrientation = Orientation.Horizontal,
                 ValueLabelOrientation= Orientation.Horizontal,
                 MaxValue = (float)rates.Max(),
@@ -117,16 +135,25 @@ namespace Money
                 LabelTextSize = 18
             };
             chartView = new ChartView { Chart = chart };
-
             currenciesChart.Children.Add(chartView);
         }
 
         async Task InitializeCurrenciesAsync()
         {
-            apiFetcher = new ApiFetcher();
+            string currenciesApiUrl = $"https://point.md/curs/methods/money/newrates/?start={DaysInMillisecondsCalculator.weekAgo}&stop={DaysInMillisecondsCalculator.today}";
+            string BTCApiUrl = "https://www.blockchain.com/ru/ticker";
+
+            currenciesFetcher = new ApiFetcher(currenciesApiUrl);
+            btcFetcher = new BTCFetcher(BTCApiUrl);
+
             await Task.Run(async () =>
             {
-                currencies = await apiFetcher.GetObjectAsync();
+                currencies = await currenciesFetcher.GetObjectAsync();
+            });
+
+            await Task.Run(async () =>
+            {
+                btcInUsd = await btcFetcher.GetBtcPricesAsync();
             });
 
             var mdlValues = new List<List<double>>();
@@ -153,11 +180,12 @@ namespace Money
             await Task.Delay(0);
             if(currencies != null)
             {
+                todayRates.Add("btc", btcInUsd * currencies["usd"][6][1]);
+                todayRates.Add("mdl", 1.0);
                 foreach (var currency in currencies)
                 {
                     todayRates.Add(currency.Key, currency.Value[6][1]);
                 }
-                todayRates.Add("mdl", 1.0);
             }
         }
 
@@ -176,10 +204,23 @@ namespace Money
             entries[currentCurrency].TextChanged += eventHandler;
         }
 
+        private void Btc_Focused(object sender, FocusEventArgs e)
+        {
+            _ = DrawChart("usd");
+            SubscribeTextChangeHandlerBy("btc");
+            btc.Text = String.Empty;
+        }
+
+        private void Btc_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            calculator.CalculateFor("btc", entries, todayRates);
+        }
+
         private void Eur_Focused(object sender, FocusEventArgs e)
         {
             _ = DrawChart("eur");
             SubscribeTextChangeHandlerBy("eur");
+            eur.Text = String.Empty;
         }
 
 
@@ -192,6 +233,7 @@ namespace Money
         {
             _ = DrawChart("gbp");
             SubscribeTextChangeHandlerBy("gbp");
+            gbp.Text = String.Empty;
         }
 
         private void Gbp_TextChanged(object sender, TextChangedEventArgs e)
@@ -203,6 +245,7 @@ namespace Money
         {
             _ = DrawChart("uah");
             SubscribeTextChangeHandlerBy("uah");
+            uah.Text = String.Empty;
         }
 
         private void Uah_TextChanged(object sender, TextChangedEventArgs e)
@@ -214,6 +257,7 @@ namespace Money
         {
             _ = DrawChart("rub");
             SubscribeTextChangeHandlerBy("rub");
+            rub.Text = String.Empty;
         }
 
         private void Rub_TextChanged(object sender, TextChangedEventArgs e)
@@ -225,6 +269,7 @@ namespace Money
         {
             _ = DrawChart("ron");
             SubscribeTextChangeHandlerBy("ron");
+            ron.Text = String.Empty;
         }
 
         private void Ron_TextChanged(object sender, TextChangedEventArgs e)
@@ -236,6 +281,7 @@ namespace Money
         {
             _ = DrawChart("usd");
             SubscribeTextChangeHandlerBy("usd");
+            usd.Text = String.Empty;
         }
 
         private void Usd_TextChanged(object sender, TextChangedEventArgs e)
@@ -247,6 +293,7 @@ namespace Money
         {
             _ = DrawChart("mdl");
             SubscribeTextChangeHandlerBy("mdl");
+            mdl.Text = String.Empty;
         }
 
         private void Mdl_TextChanged(object sender, TextChangedEventArgs e)

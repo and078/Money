@@ -24,7 +24,7 @@ namespace Money
             foreach(var entry in filteredEnrties)
             {
                 var key = entry.Key;
-                entry.Value.Text = Math.Round((currentEntryDouble * (currentTodayRate / filteredTodayRates[key])), 4).ToString();
+                entry.Value.Text = Math.Round((currentEntryDouble * (currentTodayRate / filteredTodayRates[key])), 6).ToString();
             }
         }
     }

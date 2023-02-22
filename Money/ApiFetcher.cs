@@ -9,7 +9,11 @@ namespace Money
 {
     internal class ApiFetcher
     {
-        private string url = $"https://point.md/curs/methods/money/newrates/?start={DaysInMillisecondsCalculator.weekAgo}&stop={DaysInMillisecondsCalculator.today}";
+        private string _url = string.Empty;
+        public ApiFetcher(string url)
+        {
+            _url = url;
+        }
 
         public async Task<Dictionary<string, List<List<double>>>> GetObjectAsync()
         {
@@ -21,7 +25,7 @@ namespace Money
         {
             var client = new HttpClient();
             client.DefaultRequestHeaders.Add("Accept", "application/json");
-            var response = await client.GetAsync(url);
+            var response = await client.GetAsync(_url);
             return await response.Content.ReadAsStringAsync();
         }
     }
